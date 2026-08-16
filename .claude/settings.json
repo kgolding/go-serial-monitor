@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go vet *)",
+      "Bash(echo \"vet exit=$?\")",
+      "Bash(gofmt -l .)",
+      "Bash(gofmt -w internal/pcapng/pcapng.go)",
+      "Bash(go test *)",
+      "Bash(go build *)",
+      "Bash(go env *)",
+      "Bash(echo \"--- NewStaticResource ---\")",
+      "Bash(grep -n 'func NewStaticResource' __TRACKED_VAR__/resource.go)",
+      "Bash(echo \"--- NewThemedResource ---\")",
+      "Bash(grep -n 'func NewThemedResource' __TRACKED_VAR__/theme/*.go)"
+    ]
+  }
+}

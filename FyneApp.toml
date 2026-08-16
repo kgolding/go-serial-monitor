@@ -1,0 +1,12 @@
+[Details]
+Icon = "icon.png"
+Name = "Serial Monitor"
+ID = "uk.co.kgolding.go-serial-app"
+Version = "1.0.0"
+Build = 2
+
+[LinuxAndBSD]
+GenericName = "Serial Port Monitor"
+Categories = ["Development", "Electronics"]
+Comment = "Connect to a serial port, monitor RX/TX in ASCII and hex, and send ASCII or hex data."
+Keywords = ["serial", "uart", "rs232", "terminal", "monitor"]
