@@ -223,6 +223,56 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
+  package_windows_signed:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: package_windows
+    runs-on: windows-latest
+    environment: release # fixed OIDC subject (repo:OWNER/REPO:environment:release) so Azure's federated credential doesn't need to match a different tag name every release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.NAME }}-windows
+
+      - name: Set version
+        run: |
+          $version = "${{ github.ref_name }}"
+          "VERSION=$($version.Substring(1))" >> $env:GITHUB_ENV
+
+      - name: Unzip
+        run: Expand-Archive -Path "${{ env.NAME }}-${{ env.VERSION }}-windows-x64.zip" -DestinationPath extracted
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign exe
+        uses: azure/trusted-signing-action@v2.0.0
+        with:
+          endpoint: https://weu.codesigning.azure.net/
+          trusted-signing-account-name: kgolding-codesign
+          certificate-profile-name: serial-monitor-signing
+          files-folder: ${{ github.workspace }}\extracted
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Re-zip signed package
+        run: Compress-Archive -Path "extracted\${{ env.FULLNAME }}.exe" -DestinationPath "${{ env.NAME }}-${{ env.VERSION }}-windows-x64.zip" -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}-windows
+          path: ${{ env.NAME }}-${{ env.VERSION }}-windows-x64.zip
+          if-no-files-found: error
+          overwrite: true
+
   # package_darwin_arm:
   #   if: startsWith(github.ref, 'refs/tags/')
   #   runs-on: macos-14
@@ -310,7 +360,7 @@ jobs:
         # package_darwin_intel,
         package_linux,
         package_deb,
-        package_windows,
+        package_windows_signed,
       ]
     runs-on: ubuntu-latest
     permissions: write-all
